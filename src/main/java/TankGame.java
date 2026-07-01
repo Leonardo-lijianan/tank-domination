@@ -24,7 +24,7 @@ public class TankGame extends JFrame {
     private InputHandler inputHandler;
     private int shotCooldown;
 
-    // Game constants
+    // 游戏所需的常量
     private static final int PLAYER_START_X = 300;
     private static final int PLAYER_START_Y = 450;
     private static final int PLAYER2_START_X = 250;
@@ -45,7 +45,7 @@ public class TankGame extends JFrame {
         initLevelManager();
         initGameLoop();
         gameLoop.start();
-        // Show "stage1" text on the game panel, wait for user to click "新游戏"
+        // 一开始进入游戏显示"stage1", 等待玩家按"新游戏"
         drawPanel.showStageText();
     }
 
@@ -138,7 +138,7 @@ public class TankGame extends JFrame {
     private void handleCollisions() {
         EntityPool entityPool = EntityPool.getEntityPoolSingleton();
         
-        // Player bullets vs enemies
+        // 玩家子弹与敌人的碰撞检测
         for (Tank p : entityPool.getPlayers()) {
             for (int j = 0; j < entityPool.getBullets().size(); j++) {
                 Bullet bullet = entityPool.getBullets().get(j);
@@ -163,7 +163,7 @@ public class TankGame extends JFrame {
             }
         }
 
-        // Enemy bullets vs players
+        // 敌人子弹与玩家的碰撞检测
         for (Tank p : entityPool.getPlayers()) {
             for (Bullet bullet : entityPool.getBullets()) {
                 boolean isInvincible = (p instanceof PlayerTank pt) && pt.isInvincible();
@@ -188,7 +188,7 @@ public class TankGame extends JFrame {
             }
         }
 
-        // Bullets vs obstacles
+        // 子弹与障碍物的碰撞检测
         for (Bullet bullet : entityPool.getBullets()) {
             if (!bullet.isDead()) {
                 for (Obstacle obstacle : entityPool.getObstacles()) {
@@ -201,7 +201,7 @@ public class TankGame extends JFrame {
             }
         }
 
-        // Players vs obstacles
+        // 玩家与障碍物的碰撞检测
         for (Tank p : entityPool.getPlayers()) {
             if (!p.isDead()) {
                 for (Obstacle obstacle : entityPool.getObstacles()) {
@@ -212,7 +212,7 @@ public class TankGame extends JFrame {
             }
         }
 
-        // Enemies vs obstacles
+        // 敌人与障碍物的碰撞检测
         for (EnemyTank enemy : entityPool.getEnemies()) {
             if (!enemy.isDead()) {
                 for (Obstacle obstacle : entityPool.getObstacles()) {
@@ -223,7 +223,7 @@ public class TankGame extends JFrame {
             }
         }
 
-        // Remove dead entities
+        // 移除死亡的实体
         entityPool.getEnemies().removeIf(Entity::isDead);
         entityPool.getPlayers().removeIf(Entity::isDead);
         entityPool.getBullets().removeIf(Entity::isDead);
@@ -262,7 +262,7 @@ public class TankGame extends JFrame {
 
         levelManager.initializeLevel(config);
 
-        // Create player tank
+        // 生成玩家坦克
         this.player = new PlayerTank(PLAYER_START_X, PLAYER_START_Y, PLAYER_HP, PLAYER_CD);
         entityPool.addEntity(this.player);
 
