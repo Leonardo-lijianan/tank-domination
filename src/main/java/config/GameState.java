@@ -1,5 +1,8 @@
 package config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class GameState {
     private static GameState instance;
 
@@ -16,6 +19,9 @@ public class GameState {
     private boolean isPlayerRespawning;
     private int respawnTimer;
 
+    // Kill tracking per tank type for score dialog
+    private Map<String, Integer> levelKillCounts;
+
     private GameState() {
         reset();
     }
@@ -28,17 +34,28 @@ public class GameState {
     }
 
     public void reset() {
+        GameSettings oldSettings = this.settings;
         currentLevel = 1;
         totalScore = 0;
         levelScore = 0;
-        playerLives = 3;
-        enemyRemaining = 20;
+        playerLives = oldSettings != null ? oldSettings.getPlayerLives() : 3;
+        enemyRemaining = oldSettings != null ? oldSettings.getEnemyCount() : 20;
         isGameRunning = false;
         isGameOver = false;
         isLevelComplete = false;
         isPlayerRespawning = false;
         respawnTimer = 0;
-        settings = new GameSettings();
+        levelKillCounts = new HashMap<>();
+        initKillCounts();
+        settings = (oldSettings != null) ? oldSettings : new GameSettings();
+    }
+
+    private void initKillCounts() {
+        levelKillCounts.put("blue", 0);
+        levelKillCounts.put("pink", 0);
+        levelKillCounts.put("red", 0);
+        levelKillCounts.put("green", 0);
+        levelKillCounts.put("navy", 0);
     }
 
     public void startLevel(int level) {
@@ -49,6 +66,7 @@ public class GameState {
         levelScore = 0;
         enemyRemaining = config.getEnemyCount();
         isLevelComplete = false;
+        initKillCounts();
     }
 
     public void addScore(int score) {
@@ -61,6 +79,12 @@ public class GameState {
             enemyRemaining--;
         }
     }
+
+    public void recordKill(String tankType) {
+        levelKillCounts.put(tankType, levelKillCounts.getOrDefault(tankType, 0) + 1);
+    }
+
+    public Map<String, Integer> getLevelKillCounts() { return levelKillCounts; }
 
     public void decreasePlayerLife() {
         if (playerLives > 0) {

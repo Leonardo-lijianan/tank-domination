@@ -10,6 +10,7 @@ public class GameSettings {
     private int enemyCount;
     private boolean hasBoss;
     private boolean continueGame;
+    private int playerLives;
 
     public GameSettings() {
         this.isTwoPlayer = false;
@@ -21,6 +22,7 @@ public class GameSettings {
         this.enemyCount = 20;
         this.hasBoss = false;
         this.continueGame = true;
+        this.playerLives = 3;
     }
 
     public boolean isTwoPlayer() { return isTwoPlayer; }
@@ -41,13 +43,15 @@ public class GameSettings {
     public void setHasBoss(boolean hasBoss) { this.hasBoss = hasBoss; }
     public boolean isContinueGame() { return continueGame; }
     public void setContinueGame(boolean continueGame) { this.continueGame = continueGame; }
+    public int getPlayerLives() { return playerLives; }
+    public void setPlayerLives(int playerLives) { this.playerLives = playerLives; }
 
     public int getTankSpeedValue() {
         switch (tankSpeed) {
-            case "slow": return 2;
-            case "medium": return 4;
-            case "fast": return 6;
-            default: return 2;
+            case "slow": return 1;
+            case "medium": return 2;
+            case "fast": return 3;
+            default: return 1;
         }
     }
 }

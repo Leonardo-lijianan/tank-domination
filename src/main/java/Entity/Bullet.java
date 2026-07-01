@@ -25,13 +25,17 @@ public class Bullet extends Entity {
         this.isDead = dead;
     }
 
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
+
     public int getEntityId() {
         return entityId;
     }
 
     public Bullet(int x, int y) {
         super(x, y, 3, 5);
-        this.speed = 10;
+        this.speed = 5;
     }
     
     

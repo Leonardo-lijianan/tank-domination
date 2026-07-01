@@ -12,7 +12,7 @@ public abstract class Entity {
     protected int entityId;
     protected boolean isDead;
 
-    private static final Rectangle GAME_BOUNDS = new Rectangle(0, 0, 600, 480);
+    private static final Rectangle GAME_BOUNDS = new Rectangle(0, 0, 500, 500);
 
 
     public Entity(int x, int y, int width, int height) {
@@ -29,6 +29,10 @@ public abstract class Entity {
     public abstract void draw(Graphics g);
 
     public boolean move(int dx, int dy) {
+        return move(dx, dy, null);
+    }
+
+    public boolean move(int dx, int dy, EntityPool pool) {
         boolean isOutBounds = false;
 
         // 注意，我定义的实体的局部原点在物体中心！所以左上角的坐标是(x-w/2, y-h/2)，右下角是(x+w/2, y+h/2)
@@ -37,7 +41,6 @@ public abstract class Entity {
 
         int halfW = this.width/2;
         int halfH = this.height/2;
-
 
         if (nextX - halfW < GAME_BOUNDS.x) {
             nextX = GAME_BOUNDS.x + halfW;
@@ -53,6 +56,19 @@ public abstract class Entity {
         } else if (nextY + halfH > GAME_BOUNDS.y + GAME_BOUNDS.height) {
             nextY = GAME_BOUNDS.y + GAME_BOUNDS.height - halfH;
             isOutBounds = true;
+        }
+
+        // Check obstacle collision before moving
+        if (pool != null && !isOutBounds) {
+            java.awt.Rectangle nextBounds = new java.awt.Rectangle(nextX - halfW, nextY - halfH, this.width, this.height);
+            for (Obstacle obs : pool.getObstacles()) {
+                if (!obs.isTankPassable() && !obs.isDead()) {
+                    java.awt.Rectangle obsBounds = new java.awt.Rectangle(obs.getX() - obs.getWidth()/2, obs.getY() - obs.getHeight()/2, obs.getWidth(), obs.getHeight());
+                    if (nextBounds.intersects(obsBounds)) {
+                        return false;
+                    }
+                }
+            }
         }
 
         this.x = nextX;
@@ -91,6 +107,14 @@ public abstract class Entity {
         return isDead;
     }
 
+    public void setDead(boolean dead) {
+        isDead = dead;
+    }
+
     public int getX() { return x; }
     public int getY() { return y; }
+    public void setX(int x) { this.x = x; }
+    public void setY(int y) { this.y = y; }
+    public int getWidth() { return width; }
+    public int getHeight() { return height; }
 }

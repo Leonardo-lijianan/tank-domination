@@ -14,13 +14,12 @@ public class GameSettingsDialog extends JDialog implements ActionListener {
     private JRadioButton twoPlayerBtn;
     private JRadioButton normalGameBtn;
     private JRadioButton customGameBtn;
-    private JComboBox<String> startLevelCombo;
-    private JComboBox<String> endLevelCombo;
+    private JComboBox<String> levelCombo;
     private JComboBox<String> speedCombo;
     private JComboBox<String> bulletSpeedCombo;
-    private JSpinner enemyCountSpinner;
-    private JCheckBox hasBossCheck;
+    private JTextField enemyCountField;
     private JCheckBox continueGameCheck;
+    private JCheckBox hasBossCheck;
     private JButton okBtn;
     private JButton cancelBtn;
 
@@ -34,18 +33,18 @@ public class GameSettingsDialog extends JDialog implements ActionListener {
     private void initDialog() {
         setTitle("游戏设置");
         setModal(true);
-        setSize(400, 500);
+        setSize(320, 380);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
         mainPanel.add(createPlayerPanel());
-        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(Box.createVerticalStrut(8));
         mainPanel.add(createGameModePanel());
-        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(Box.createVerticalStrut(8));
 
         customPanel = createCustomPanel();
         customPanel.setEnabled(settings.isCustomGame());
@@ -53,7 +52,7 @@ public class GameSettingsDialog extends JDialog implements ActionListener {
 
         add(mainPanel, BorderLayout.CENTER);
 
-        JPanel btnPanel = new JPanel(new FlowLayout());
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         okBtn = new JButton("确定");
         cancelBtn = new JButton("取消");
         okBtn.addActionListener(this);
@@ -64,8 +63,7 @@ public class GameSettingsDialog extends JDialog implements ActionListener {
     }
 
     private JPanel createPlayerPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.setBorder(BorderFactory.createTitledBorder("玩家模式"));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
         ButtonGroup group = new ButtonGroup();
         singlePlayerBtn = new JRadioButton("单人游戏");
         twoPlayerBtn = new JRadioButton("双人游戏");
@@ -79,8 +77,7 @@ public class GameSettingsDialog extends JDialog implements ActionListener {
     }
 
     private JPanel createGameModePanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.setBorder(BorderFactory.createTitledBorder("游戏模式"));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
         ButtonGroup group = new ButtonGroup();
         normalGameBtn = new JRadioButton("正常游戏");
         customGameBtn = new JRadioButton("自选游戏");
@@ -98,41 +95,71 @@ public class GameSettingsDialog extends JDialog implements ActionListener {
     }
 
     private JPanel createCustomPanel() {
-        JPanel panel = new JPanel(new GridLayout(6, 2, 5, 5));
-        panel.setBorder(BorderFactory.createTitledBorder("自选游戏设置"));
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        panel.add(new JLabel("起始关数:"));
-        startLevelCombo = new JComboBox<>(new String[]{"1","2","3","4","5","6","7","8"});
-        startLevelCombo.setSelectedItem(String.valueOf(settings.getStartLevel()));
-        panel.add(startLevelCombo);
+        // 请选择关数
+        JPanel levelRow = createRow("请选择关数:");
+        levelCombo = new JComboBox<>(new String[]{"1","2","3","4","5","6","7","8"});
+        levelCombo.setSelectedItem(String.valueOf(settings.getStartLevel()));
+        levelRow.add(levelCombo);
+        panel.add(levelRow);
 
-        panel.add(new JLabel("结束关数:"));
-        endLevelCombo = new JComboBox<>(new String[]{"1","2","3","4","5","6","7","8"});
-        endLevelCombo.setSelectedItem(String.valueOf(settings.getEndLevel()));
-        panel.add(endLevelCombo);
+        // 坦克速度
+        JPanel speedRow = createRow("坦克速度:");
+        speedCombo = new JComboBox<>(new String[]{"0","1","2"});
+        speedCombo.setSelectedItem(String.valueOf(getSpeedIndex()));
+        speedRow.add(speedCombo);
+        panel.add(speedRow);
 
-        panel.add(new JLabel("坦克速度:"));
-        speedCombo = new JComboBox<>(new String[]{"慢速","中速","快速"});
-        speedCombo.setSelectedItem(settings.getTankSpeed().equals("slow") ? "慢速" :
-                settings.getTankSpeed().equals("medium") ? "中速" : "快速");
-        panel.add(speedCombo);
+        // 子弹速度
+        JPanel bulletRow = createRow("子弹速度:");
+        bulletSpeedCombo = new JComboBox<>(new String[]{"0","1","2"});
+        bulletSpeedCombo.setSelectedItem(String.valueOf(getBulletSpeedIndex()));
+        bulletRow.add(bulletSpeedCombo);
+        panel.add(bulletRow);
 
-        panel.add(new JLabel("子弹速度:"));
-        bulletSpeedCombo = new JComboBox<>(new String[]{"慢","中","快"});
-        bulletSpeedCombo.setSelectedItem(settings.getBulletSpeed() <= 5 ? "慢" :
-                settings.getBulletSpeed() <= 10 ? "中" : "快");
-        panel.add(bulletSpeedCombo);
+        // 坦克数量
+        JPanel enemyRow = createRow("坦克数量(10-50):");
+        enemyCountField = new JTextField(String.valueOf(settings.getEnemyCount()), 5);
+        enemyRow.add(enemyCountField);
+        panel.add(enemyRow);
 
-        panel.add(new JLabel("敌人坦克数量:"));
-        enemyCountSpinner = new JSpinner(new SpinnerNumberModel(settings.getEnemyCount(), 5, 50, 1));
-        panel.add(enemyCountSpinner);
-
-        panel.add(new JLabel("是否有关底:"));
-        hasBossCheck = new JCheckBox();
+        // Checkboxes
+        JPanel checkPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
+        continueGameCheck = new JCheckBox("继续游戏");
+        continueGameCheck.setSelected(settings.isContinueGame());
+        hasBossCheck = new JCheckBox("出现关底");
         hasBossCheck.setSelected(settings.isHasBoss());
-        panel.add(hasBossCheck);
+        checkPanel.add(continueGameCheck);
+        checkPanel.add(hasBossCheck);
+        panel.add(checkPanel);
 
         return panel;
+    }
+
+    private JPanel createRow(String label) {
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
+        JLabel lbl = new JLabel(label);
+        lbl.setPreferredSize(new Dimension(110, 25));
+        row.add(lbl);
+        return row;
+    }
+
+    private int getSpeedIndex() {
+        switch (settings.getTankSpeed()) {
+            case "slow": return 0;
+            case "medium": return 1;
+            case "fast": return 2;
+            default: return 0;
+        }
+    }
+
+    private int getBulletSpeedIndex() {
+        int bs = settings.getBulletSpeed();
+        if (bs <= 5) return 0;
+        if (bs <= 10) return 1;
+        return 2;
     }
 
     @Override
@@ -140,15 +167,24 @@ public class GameSettingsDialog extends JDialog implements ActionListener {
         if (e.getSource() == okBtn) {
             settings.setTwoPlayer(twoPlayerBtn.isSelected());
             settings.setCustomGame(customGameBtn.isSelected());
-            settings.setStartLevel(Integer.parseInt((String) startLevelCombo.getSelectedItem()));
-            settings.setEndLevel(Integer.parseInt((String) endLevelCombo.getSelectedItem()));
+            settings.setStartLevel(Integer.parseInt((String) levelCombo.getSelectedItem()));
+            settings.setEndLevel(settings.getStartLevel());
+
             String speed = (String) speedCombo.getSelectedItem();
-            settings.setTankSpeed(speed.equals("慢速") ? "slow" : speed.equals("中速") ? "medium" : "fast");
+            settings.setTankSpeed(speed.equals("0") ? "slow" : speed.equals("1") ? "medium" : "fast");
+
             String bulletSpeed = (String) bulletSpeedCombo.getSelectedItem();
-            settings.setBulletSpeed(bulletSpeed.equals("慢") ? 5 : bulletSpeed.equals("中") ? 10 : 15);
-            settings.setEnemyCount((Integer) enemyCountSpinner.getValue());
+            settings.setBulletSpeed(bulletSpeed.equals("0") ? 5 : bulletSpeed.equals("1") ? 10 : 15);
+
+            try {
+                int count = Integer.parseInt(enemyCountField.getText().trim());
+                settings.setEnemyCount(Math.max(10, Math.min(50, count)));
+            } catch (NumberFormatException ex) {
+                settings.setEnemyCount(20);
+            }
+
             settings.setHasBoss(hasBossCheck.isSelected());
-            settings.setContinueGame(continueGameCheck != null && continueGameCheck.isSelected());
+            settings.setContinueGame(continueGameCheck.isSelected());
             dispose();
         } else {
             dispose();

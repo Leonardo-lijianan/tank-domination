@@ -16,13 +16,25 @@ import java.awt.event.KeyEvent;
 public class TankGame extends JFrame {
     private DrawPanel drawPanel;
     private PlayerTank player;
-    private PlayerTank2 player2;
+    private PlayerTank player2;
     private Timer gameLoop;
     private GameState gameState;
     private LevelManager levelManager;
     private GameMenu gameMenu;
     private InputHandler inputHandler;
     private int shotCooldown;
+
+    // Game constants
+    private static final int PLAYER_START_X = 300;
+    private static final int PLAYER_START_Y = 450;
+    private static final int PLAYER2_START_X = 250;
+    private static final int PLAYER2_START_Y = 450;
+    private static final int PLAYER_HP = 100;
+    private static final int PLAYER_CD = 10;
+    private static final int PLAYER_SPEED = 8;
+    private static final int SHOT_COOLDOWN = 5;
+    private static final int TEAM_PLAYER = 1;
+    private static final int TEAM_ENEMY = 2;
 
 
     public TankGame() {
@@ -33,12 +45,15 @@ public class TankGame extends JFrame {
         initLevelManager();
         initGameLoop();
         gameLoop.start();
-        startLevel(1);
+        // Show "stage1" text on the game panel, wait for user to click "新游戏"
+        drawPanel.showStageText();
     }
 
     public void startNewGame() {
         gameState.reset();
-        startLevel(1);
+        int startLevel = gameState.getSettings().isCustomGame() ?
+                gameState.getSettings().getStartLevel() : 1;
+        startLevel(startLevel);
     }
 
     public void startLevelFromMenu(int level) {
@@ -54,7 +69,7 @@ public class TankGame extends JFrame {
     }
 
     private void initGameLoop() {
-        gameLoop = new Timer(16, (e) -> {
+        gameLoop = new Timer(32, (e) -> {
             if (gameState.isGameRunning()) {
                 EntityPool entityPool = EntityPool.getEntityPoolSingleton();
                 handlePlayerInput();
@@ -71,39 +86,30 @@ public class TankGame extends JFrame {
     private void handleRespawn() {
         if (gameState.isPlayerRespawning()) {
             gameState.tickRespawn();
-            if (!gameState.isPlayerRespawning()) {
-                EntityPool entityPool = EntityPool.getEntityPoolSingleton();
-                this.player = new PlayerTank(300, 450, 100, 10);
-                entityPool.addEntity(this.player);
-            }
         }
     }
 
     private void handlePlayerInput() {
-        if (player != null && !player.isDead()) {
-            boolean moved = false;
+        EntityPool entityPool = EntityPool.getEntityPoolSingleton();
+        if (player != null && !player.isDead() && !player.isRespawning()) {
             if (inputHandler.isKeyPressed(KeyEvent.VK_W)) {
                 player.rotate(0);
-                player.move(0, -5);
-                moved = true;
+                player.move(0, -PLAYER_SPEED, entityPool);
             } else if (inputHandler.isKeyPressed(KeyEvent.VK_S)) {
                 player.rotate(2);
-                player.move(0, 5);
-                moved = true;
+                player.move(0, PLAYER_SPEED, entityPool);
             } else if (inputHandler.isKeyPressed(KeyEvent.VK_A)) {
                 player.rotate(1);
-                player.move(-5, 0);
-                moved = true;
+                player.move(-PLAYER_SPEED, 0, entityPool);
             } else if (inputHandler.isKeyPressed(KeyEvent.VK_D)) {
                 player.rotate(3);
-                player.move(5, 0);
-                moved = true;
+                player.move(PLAYER_SPEED, 0, entityPool);
             }
             
             if (inputHandler.isKeyPressed(KeyEvent.VK_J)) {
                 if (shotCooldown <= 0) {
                     player.shot();
-                    shotCooldown = 5;
+                    shotCooldown = SHOT_COOLDOWN;
                 }
             }
             if (shotCooldown > 0) shotCooldown--;
@@ -112,16 +118,16 @@ public class TankGame extends JFrame {
         if (player2 != null && !player2.isDead() && gameState.getSettings().isTwoPlayer()) {
             if (inputHandler.isKeyPressed(KeyEvent.VK_UP)) {
                 player2.rotate(0);
-                player2.move(0, -5);
+                player2.move(0, -PLAYER_SPEED, entityPool);
             } else if (inputHandler.isKeyPressed(KeyEvent.VK_DOWN)) {
                 player2.rotate(2);
-                player2.move(0, 5);
+                player2.move(0, PLAYER_SPEED, entityPool);
             } else if (inputHandler.isKeyPressed(KeyEvent.VK_LEFT)) {
                 player2.rotate(1);
-                player2.move(-5, 0);
+                player2.move(-PLAYER_SPEED, 0, entityPool);
             } else if (inputHandler.isKeyPressed(KeyEvent.VK_RIGHT)) {
                 player2.rotate(3);
-                player2.move(5, 0);
+                player2.move(PLAYER_SPEED, 0, entityPool);
             }
             if (inputHandler.isKeyPressed(KeyEvent.VK_ENTER)) {
                 player2.shot();
@@ -133,10 +139,10 @@ public class TankGame extends JFrame {
         EntityPool entityPool = EntityPool.getEntityPoolSingleton();
         
         // Player bullets vs enemies
-        for (PlayerTank p : entityPool.getPlayers()) {
+        for (Tank p : entityPool.getPlayers()) {
             for (int j = 0; j < entityPool.getBullets().size(); j++) {
                 Bullet bullet = entityPool.getBullets().get(j);
-                if (bullet.getEntityId() == 1 && !bullet.isDead()) {
+                if (bullet.getEntityId() == TEAM_PLAYER && !bullet.isDead()) {
                     for (EnemyTank enemy : entityPool.getEnemies()) {
                         if (!enemy.isDead() && bullet.isCollided(enemy)) {
                             enemy.handleCollided(bullet);
@@ -144,6 +150,7 @@ public class TankGame extends JFrame {
                             if (enemy.isDead()) {
                                 int score = ScoreManager.getScore(enemy.getColor());
                                 gameState.addScore(score);
+                                gameState.recordKill(enemy.getColor());
                                 gameState.decreaseEnemy();
                                 gameState.checkLevelComplete();
                                 entityPool.addEntity(new Explosion(enemy.getX(), enemy.getY()));
@@ -157,14 +164,24 @@ public class TankGame extends JFrame {
         }
 
         // Enemy bullets vs players
-        for (PlayerTank p : entityPool.getPlayers()) {
+        for (Tank p : entityPool.getPlayers()) {
             for (Bullet bullet : entityPool.getBullets()) {
-                if (bullet.getEntityId() == 2 && !bullet.isDead() && !p.isDead()) {
+                boolean isInvincible = (p instanceof PlayerTank pt) && pt.isInvincible();
+                
+                if (bullet.getEntityId() == TEAM_ENEMY && !bullet.isDead() && !p.isDead() && !isInvincible) {
                     if (bullet.isCollided(p)) {
                         p.handleCollided(bullet);
                         bullet.setDead(true);
                         if (p.isDead()) {
                             gameState.decreasePlayerLife();
+                            if (gameState.isPlayerRespawning()) {
+                                // Immediately respawn player with flash animation
+                                p.setDead(false);
+                                p.setX(PLAYER_START_X);
+                                p.setY(PLAYER_START_Y);
+                                p.setHp(PLAYER_HP);
+                                ((PlayerTank) p).startRespawnFlash();
+                            }
                         }
                     }
                 }
@@ -185,7 +202,7 @@ public class TankGame extends JFrame {
         }
 
         // Players vs obstacles
-        for (PlayerTank p : entityPool.getPlayers()) {
+        for (Tank p : entityPool.getPlayers()) {
             if (!p.isDead()) {
                 for (Obstacle obstacle : entityPool.getObstacles()) {
                     if (!obstacle.isTankPassable() && !obstacle.isDead() && p.isCollided(obstacle)) {
@@ -216,7 +233,7 @@ public class TankGame extends JFrame {
     private void checkGameState() {
         if (gameState.isLevelComplete()) {
             gameState.setGameRunning(false);
-            LevelCompleteDialog dialog = new LevelCompleteDialog(this, gameState);
+            LevelCompleteDialog dialog = new LevelCompleteDialog(this, gameState, this);
             dialog.setVisible(true);
             if (gameState.isGameRunning()) {
                 startLevel(gameState.getCurrentLevel());
@@ -230,7 +247,7 @@ public class TankGame extends JFrame {
         }
     }
 
-    private void startLevel(int level) {
+    public void startLevel(int level) {
         EntityPool entityPool = EntityPool.getEntityPoolSingleton();
         entityPool.reset();
 
@@ -246,12 +263,14 @@ public class TankGame extends JFrame {
         levelManager.initializeLevel(config);
 
         // Create player tank
-        this.player = new PlayerTank(300, 450, 100, 10);
+        this.player = new PlayerTank(PLAYER_START_X, PLAYER_START_Y, PLAYER_HP, PLAYER_CD);
         entityPool.addEntity(this.player);
 
         // Create player 2 if two-player mode
         if (gameState.getSettings().isTwoPlayer()) {
-            this.player2 = new PlayerTank2(250, 450, 100, 10);
+            this.player2 = new PlayerTank(PLAYER2_START_X, PLAYER2_START_Y, PLAYER_HP, PLAYER_CD,
+                    "cyan", 10,
+                    KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_ENTER);
             entityPool.addEntity(this.player2);
         }
 

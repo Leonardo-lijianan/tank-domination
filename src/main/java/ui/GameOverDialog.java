@@ -35,9 +35,12 @@ public class GameOverDialog extends JDialog {
         okBtn.addActionListener(e -> {
             GameRecordDAO dao = new GameRecordDAO();
             if (dao.isNewRecord(gameState.getTotalScore())) {
-                String name = JOptionPane.showInputDialog(this, "恭喜破纪录！请输入姓名:");
-                if (name != null && !name.isEmpty()) {
-                    dao.saveRecord(name, gameState.getTotalScore());
+                boolean b = dao.getTopRecords(1).isEmpty() || ((Integer) dao.getTopRecords(1).getFirst()[1]) < gameState.getTotalScore();
+                if (b) {
+                    String name = JOptionPane.showInputDialog(this, "恭喜破纪录！请输入姓名:");
+                    if (name != null && !name.isEmpty()) {
+                        dao.saveRecord(name, gameState.getTotalScore());
+                    }
                 }
             }
             dispose();

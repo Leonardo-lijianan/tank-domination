@@ -42,8 +42,15 @@ public class River extends Obstacle {
         };
         g.setColor(waterColors[animFrame]);
         g.fillRect(x - width/2, y - height/2, width, height);
+        
+        // Draw flowing water lines
         g.setColor(new Color(135, 206, 250));
-        g.fillRect(x - width/2 + 3, y - height/2 + 3, 5, 3);
-        g.fillRect(x + 2, y + 2, 5, 3);
+        int offset = (animFrame % 2) * 3;
+        // Top wave line
+        g.fillRect(x - width/2 + 2 + offset, y - height/2 + 4, 6, 2);
+        g.fillRect(x - width/2 + 10 - offset, y - height/2 + 8, 5, 2);
+        // Bottom wave line
+        g.fillRect(x - width/2 + 4 - offset, y + height/2 - 8, 6, 2);
+        g.fillRect(x - width/2 + 12 + offset, y + height/2 - 4, 5, 2);
     }
 }

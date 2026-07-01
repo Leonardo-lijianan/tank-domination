@@ -10,7 +10,7 @@ public class Tank extends Entity {
     protected int curCd;
     protected int speed;
     protected int teamId;
-    private final EntityPool bulletPool;
+    protected final EntityPool bulletPool;
 
 
     protected final HashMap<String, Color[]> colorSet = initColorSet();
@@ -60,6 +60,18 @@ public class Tank extends Entity {
         if (this.hp <= 0) {
             isDead = true;
         }
+    }
+
+    public void takeDamage(int amount) {
+        this.hp -= amount;
+        if (this.hp <= 0) {
+            isDead = true;
+        }
+    }
+
+    public void setHp(int hp) {
+        this.hp = hp;
+        isDead = false;
     }
 
     @Override

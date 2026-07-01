@@ -92,7 +92,7 @@ public class EntityPool {
 
         for (int i = 0; i < players.size(); i++) {
             for (int j = 0; j < obstacles.size(); j++) {
-                PlayerTank player = players.get(i);
+                Tank player = players.get(i);
                 Obstacle obstacle = obstacles.get(j);
                 if (!obstacle.isTankPassable() && player.isCollided(obstacle)) {
                     player.handleCollided(obstacle);
