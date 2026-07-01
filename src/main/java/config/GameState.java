@@ -1,0 +1,106 @@
+package config;
+
+public class GameState {
+    private static GameState instance;
+
+    private int currentLevel;
+    private int totalScore;
+    private int levelScore;
+    private int playerLives;
+    private int enemyRemaining;
+    private boolean isGameRunning;
+    private boolean isGameOver;
+    private boolean isLevelComplete;
+    private GameSettings settings;
+
+    private boolean isPlayerRespawning;
+    private int respawnTimer;
+
+    private GameState() {
+        reset();
+    }
+
+    public static GameState getInstance() {
+        if (instance == null) {
+            instance = new GameState();
+        }
+        return instance;
+    }
+
+    public void reset() {
+        currentLevel = 1;
+        totalScore = 0;
+        levelScore = 0;
+        playerLives = 3;
+        enemyRemaining = 20;
+        isGameRunning = false;
+        isGameOver = false;
+        isLevelComplete = false;
+        isPlayerRespawning = false;
+        respawnTimer = 0;
+        settings = new GameSettings();
+    }
+
+    public void startLevel(int level) {
+        LevelConfig config = settings.isCustomGame() ?
+                new LevelConfig(level, settings.getEnemyCount(), settings.getTankSpeed(), settings.isHasBoss()) :
+                LevelConfig.getDefaultConfig(level);
+        currentLevel = level;
+        levelScore = 0;
+        enemyRemaining = config.getEnemyCount();
+        isLevelComplete = false;
+    }
+
+    public void addScore(int score) {
+        levelScore += score;
+        totalScore += score;
+    }
+
+    public void decreaseEnemy() {
+        if (enemyRemaining > 0) {
+            enemyRemaining--;
+        }
+    }
+
+    public void decreasePlayerLife() {
+        if (playerLives > 0) {
+            playerLives--;
+        }
+        if (playerLives == 0) {
+            isGameOver = true;
+            isGameRunning = false;
+        } else {
+            isPlayerRespawning = true;
+            respawnTimer = 120;
+        }
+    }
+
+    public boolean isPlayerRespawning() { return isPlayerRespawning; }
+    public int getRespawnTimer() { return respawnTimer; }
+    public void tickRespawn() {
+        if (respawnTimer > 0) {
+            respawnTimer--;
+            if (respawnTimer == 0) {
+                isPlayerRespawning = false;
+            }
+        }
+    }
+
+    public void checkLevelComplete() {
+        if (enemyRemaining == 0 && isGameRunning) {
+            isLevelComplete = true;
+        }
+    }
+
+    public int getCurrentLevel() { return currentLevel; }
+    public int getTotalScore() { return totalScore; }
+    public int getLevelScore() { return levelScore; }
+    public int getPlayerLives() { return playerLives; }
+    public int getEnemyRemaining() { return enemyRemaining; }
+    public boolean isGameRunning() { return isGameRunning; }
+    public void setGameRunning(boolean running) { isGameRunning = running; }
+    public boolean isGameOver() { return isGameOver; }
+    public boolean isLevelComplete() { return isLevelComplete; }
+    public GameSettings getSettings() { return settings; }
+    public void setSettings(GameSettings settings) { this.settings = settings; }
+}
