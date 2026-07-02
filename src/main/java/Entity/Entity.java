@@ -42,6 +42,7 @@ public abstract class Entity {
         int halfW = this.width/2;
         int halfH = this.height/2;
 
+        // 检测是否与边界碰撞
         if (nextX - halfW < GAME_BOUNDS.x) {
             nextX = GAME_BOUNDS.x + halfW;
             isOutBounds = true;
@@ -58,7 +59,7 @@ public abstract class Entity {
             isOutBounds = true;
         }
 
-        // Check obstacle collision before moving
+        // 检测是否与障碍物碰撞
         if (pool != null && !isOutBounds) {
             java.awt.Rectangle nextBounds = new java.awt.Rectangle(nextX - halfW, nextY - halfH, this.width, this.height);
             for (Obstacle obs : pool.getObstacles()) {

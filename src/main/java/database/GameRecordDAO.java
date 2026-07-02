@@ -30,7 +30,7 @@ public class GameRecordDAO {
         File dbFile = new File(DB_PATH);
         if (!dbFile.exists()) {
             try {
-                // Use Jackcess to create a real Access database
+                // 用Jackcess去创建一个Access数据库
                 Database db = DatabaseBuilder.create(Database.FileFormat.V2010, dbFile);
                 TableBuilder tableBuilder = new TableBuilder(TABLE_NAME)
                         .addColumn(new ColumnBuilder("ID", DataType.LONG).setAutoNumber(true))

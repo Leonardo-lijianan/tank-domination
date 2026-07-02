@@ -39,14 +39,14 @@ public class LevelCompleteDialog extends JDialog {
     }
 
     private void initDialog() {
-        setSize(520, 480);
+        setSize(520, 560);
         setLocationRelativeTo(getParent());
         setResizable(false);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getContentPane().setBackground(Color.BLACK);
 
         ScorePanel scorePanel = new ScorePanel();
-        scorePanel.setPreferredSize(new Dimension(500, 500));
+        scorePanel.setPreferredSize(new Dimension(500, 460));
         add(scorePanel, BorderLayout.CENTER);
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 10));
@@ -95,7 +95,7 @@ public class LevelCompleteDialog extends JDialog {
             g2.drawString(title, (w - fm.stringWidth(title)) / 2, y);
             y += 45;
 
-            // Tank kill breakdown
+            // 消灭敌方坦克类型及其数量的Map
             Map<String, Integer> kills = gameState.getLevelKillCounts();
             int totalEnemy = 0;
             int totalScore = 0;
@@ -111,12 +111,12 @@ public class LevelCompleteDialog extends JDialog {
 
                 int x = 55;
 
-                // Draw scaled-down tank icon using EnemyTank's draw method
+                // 用EnemyTank原有的draw方法画敌方坦克图标
                 EnemyTank displayTank = displayTanks.get(i);
                 int tankX = x + 10;
                 int tankY = y + 10;
 
-                // Save and apply scale transform
+                // 保存并应用缩小变换
                 AffineTransform oldTransform = g2.getTransform();
                 g2.translate(tankX, tankY);
                 g2.scale(TANK_SCALE, TANK_SCALE);
@@ -125,7 +125,7 @@ public class LevelCompleteDialog extends JDialog {
                 displayTank.draw(g2);
                 g2.setTransform(oldTransform);
 
-                // Count
+                // 渲染数量
                 g2.setColor(Color.WHITE);
                 g2.setFont(infoFont);
                 String countStr = String.format("%2d", count);
@@ -135,7 +135,7 @@ public class LevelCompleteDialog extends JDialog {
                 int cx = x + 72;
                 g2.drawString("x", cx, y + 14);
 
-                // Score per kill (right-aligned)
+                // 每次消灭的分数 (右对齐)
                 int sx = cx + 18;
                 String scoreStr = String.valueOf(scorePerKill);
                 g2.drawString(scoreStr, sx + 44 - g2.getFontMetrics(infoFont).stringWidth(scoreStr), y + 14);
@@ -144,7 +144,7 @@ public class LevelCompleteDialog extends JDialog {
                 int eqx = sx + 52;
                 g2.drawString("=", eqx, y + 14);
 
-                // Subtotal (right-aligned)
+                // 各项总和分 (右对齐)
                 int subx = eqx + 20;
                 String subStr = String.valueOf(subtotal);
                 g2.drawString(subStr, subx + 64 - g2.getFontMetrics(infoFont).stringWidth(subStr), y + 14);
@@ -158,7 +158,7 @@ public class LevelCompleteDialog extends JDialog {
             g2.drawLine(28, y, w - 28, y);
             y += 30;
 
-            // Bottom info
+            // 底下的信息，敌人总数量及总得分
             g2.setFont(totalFont);
             g2.setColor(Color.WHITE);
             String enemyStr = "enemy: " + totalEnemy;
